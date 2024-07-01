@@ -43,13 +43,22 @@ cleanup(void)
 	SDL_Quit();
 }
 
+time_t
+time_sync(void)
+{
+	time_t start = time(NULL), now;
+	while ((now = time(NULL)) <= start)
+		SDL_Delay(1);
+	return now;
+}
+
 #define draw_pixel(x, y, color)\
 	G.pixels[(y)*SCR_W + (x)] = (color);
 
 void
 draw_digit(u8 digit, i32 x, i32 y, u32 color)
 {
-	const u8 font[10][3][3] = {
+	static const u8 font[10][3][3] = {
 		{ {1, 1, 1}, {1, 0, 1}, {1, 1, 1} }, /* 0 */
 		{ {1, 1, 0}, {0, 1, 0}, {1, 1, 1} }, /* 1 */
 		{ {1, 1, 0}, {0, 1, 0}, {0, 1, 1} }, /* 2 */
@@ -134,7 +143,7 @@ main(int argc, char *argv[])
 			SDL_GetError());
 	SDL_ShowWindow(G.win);
 
-	t.sec_end = time(NULL) + t.sec_left;
+	t.sec_end = time_sync() + t.sec_left;
 	time_t last_draw = t.sec_left + 1;
 	while (!G.should_quit) {
 		if (t.finished && CFG_QUIT_IMMEDIATELY)
