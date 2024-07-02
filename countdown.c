@@ -59,16 +59,16 @@ void
 draw_digit(u8 digit, i32 x, i32 y, u32 color)
 {
 	static const u8 font[10][3][3] = {
-		{ {1, 1, 1}, {1, 0, 1}, {1, 1, 1} }, /* 0 */
-		{ {1, 1, 0}, {0, 1, 0}, {1, 1, 1} }, /* 1 */
-		{ {1, 1, 0}, {0, 1, 0}, {0, 1, 1} }, /* 2 */
-		{ {1, 1, 0}, {0, 1, 1}, {1, 1, 0} }, /* 3 */
-		{ {1, 0, 1}, {1, 1, 1}, {0, 0, 1} }, /* 4 */
-		{ {0, 1, 1}, {0, 1, 0}, {1, 1, 0} }, /* 5 */
-		{ {1, 0, 0}, {1, 1, 1}, {1, 1, 1} }, /* 6 */
-		{ {1, 1, 1}, {0, 0, 1}, {0, 0, 1} }, /* 7 */
-		{ {1, 1, 1}, {1, 1, 1}, {1, 1, 1} }, /* 8 */
-		{ {1, 1, 1}, {1, 1, 1}, {0, 0, 1} }  /* 9 */
+		{{1, 1, 1}, {1, 0, 1}, {1, 1, 1}}, /* 0 */
+		{{1, 1, 0}, {0, 1, 0}, {1, 1, 1}}, /* 1 */
+		{{1, 1, 0}, {0, 1, 0}, {0, 1, 1}}, /* 2 */
+		{{1, 1, 0}, {0, 1, 1}, {1, 1, 0}}, /* 3 */
+		{{1, 0, 1}, {1, 1, 1}, {0, 0, 1}}, /* 4 */
+		{{0, 1, 1}, {0, 1, 0}, {1, 1, 0}}, /* 5 */
+		{{1, 0, 0}, {1, 1, 1}, {1, 1, 1}}, /* 6 */
+		{{1, 1, 1}, {0, 0, 1}, {0, 0, 1}}, /* 7 */
+		{{1, 1, 1}, {1, 1, 1}, {1, 1, 1}}, /* 8 */
+		{{1, 1, 1}, {1, 1, 1}, {0, 0, 1}}  /* 9 */
 	};
 
 	for (u8 dy = 0; dy < 3; ++dy)
@@ -141,6 +141,41 @@ main(int argc, char *argv[])
 				SCR_W, SCR_H),
 			"SDL_CreateTexture(): %s",
 			SDL_GetError());
+
+#define B CFG_COLOR_BG
+#define F CFG_COLOR_FG_ON
+	u32 icon_pixels[5*5] = {
+		B, B, B, B, B,
+		B, F, F, F, B,
+		B, F, B, B, B,
+		B, F, F, F, B,
+		B, B, B, B, B,
+	};
+#undef B
+#undef F
+
+	SDL_Surface *icon_sfc = SDL_CreateRGBSurfaceFrom(icon_pixels,
+			5, 5, 32, 5*sizeof(u32),
+			0x00ff0000,
+			0x0000ff00,
+			0x000000ff,
+			0);
+	if (icon_sfc) {
+		SDL_Surface *out = SDL_CreateRGBSurface(0,
+				96, 96, 32,
+				0xff0000,
+				0x00ff00,
+				0x0000ff,
+				0);
+		SDL_BlitScaled(icon_sfc,
+				&(SDL_Rect){0, 0, 5, 5},
+				out,
+				&(SDL_Rect){0, 0, 96, 96});
+		SDL_SetWindowIcon(G.win, out);
+		SDL_FreeSurface(out);
+		SDL_FreeSurface(icon_sfc);
+	}
+
 	SDL_ShowWindow(G.win);
 
 	t.sec_end = time_sync() + t.sec_left;
@@ -218,7 +253,7 @@ draw:
 			draw_digit(t.s/10, 21, 1, fg_on);
 			draw_digit(t.s%10, 25, 1, fg_on);
 
-			SDL_UpdateTexture(G.tex, NULL, G.pixels, SCR_W * 4);
+			SDL_UpdateTexture(G.tex, NULL, G.pixels, SCR_W * sizeof(u32));
 		}
 
 		SDL_RenderClear(G.ren);
